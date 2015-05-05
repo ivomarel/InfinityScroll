@@ -4,5 +4,5 @@ These script will make your UnityGUI ScrollRects scroll infinitely. I used the H
 Check out https://www.youtube.com/watch?v=6-dbROuf1zk
 
 Note:
-I updated the plugin. The video doesn't match perfectly anymore but it essentially the same.
+I updated the plugin. The video doesn't match perfectly anymore but it's essentially the same.
 
