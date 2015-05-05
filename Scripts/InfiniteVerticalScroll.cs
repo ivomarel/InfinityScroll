@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 using UnityEngine.UI;
@@ -15,14 +15,14 @@ public class InfiniteVerticalScroll : InfiniteScroll
 		return vector.y;
 	}
 
-	protected override Vector3 GetVector (float value)
+	protected override Vector2 GetVector (float value)
 	{
-		return new Vector3 (0, value);
+		return new Vector2 (0, value);
 	}
 
 	protected override float GetPos (RectTransform item)
 	{
-		return item.localPosition.y + container.localPosition.y;
+		return item.localPosition.y + content.localPosition.y;
 	}
 
 	protected override int OneOrMinusOne ()

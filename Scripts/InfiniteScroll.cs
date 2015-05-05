@@ -4,13 +4,11 @@ using System.Collections.Generic;
 
 using UnityEngine.UI;
 
-public abstract class InfiniteScroll : MonoBehaviour
+public abstract class InfiniteScroll : ScrollRect
 {
 	public bool initOnAwake;
 
 	protected RectTransform t;
-	protected RectTransform container;
-	private ScrollRect scrollRect;
 
 	private RectTransform[] prefabItems;
 	private int itemTypeStart = 0;
@@ -18,12 +16,14 @@ public abstract class InfiniteScroll : MonoBehaviour
 
 	private bool init;
 
+	private Vector2 dragOffset = Vector2.zero;
+
 	#region abstracts	
 	protected abstract float GetSize (RectTransform item);
 	
 	protected abstract float GetDimension (Vector2 vector);
 	
-	protected abstract Vector3 GetVector (float value);
+	protected abstract Vector2 GetVector (float value);
 
 	protected abstract float GetPos (RectTransform item);
 
@@ -31,11 +31,12 @@ public abstract class InfiniteScroll : MonoBehaviour
 	#endregion
 
 	#region core
-	private void Awake ()
+	new void Awake ()
 	{
-		scrollRect = GetComponent<ScrollRect> ();
+		if (!Application.isPlaying)
+			return;
+
 		t = GetComponent<RectTransform> ();
-		container = scrollRect.content;
 
 		//Currently the anchors are set in code because it only works properly under these conditions.
 		t.anchorMax = new Vector2 (0.5f, 0.5f);
@@ -50,9 +51,9 @@ public abstract class InfiniteScroll : MonoBehaviour
 		init = true;
 
 		//Creating an array of prefab items and disabling them
-		prefabItems = new RectTransform[container.childCount];
+		prefabItems = new RectTransform[content.childCount];
 		int i = 0;
-		foreach (RectTransform child in container) {
+		foreach (RectTransform child in content) {
 			prefabItems [i] = child;
 			child.gameObject.SetActive (false);
 			i++;
@@ -67,19 +68,19 @@ public abstract class InfiniteScroll : MonoBehaviour
 	}
 	private void Update ()
 	{
-		if (!init)
+		if (!Application.isPlaying || !init)
 			return;
 
-		if (GetDimension (container.sizeDelta) - (GetDimension (container.localPosition) * OneOrMinusOne ()) < GetDimension (t.sizeDelta)) {
+		if (GetDimension (content.sizeDelta) - (GetDimension (content.localPosition) * OneOrMinusOne ()) < GetDimension (t.sizeDelta)) {
 			NewItemAtEnd ();
 			//margin is used to Destroy objects. We add them at half the margin (if we do it at full margin, we continuously add and delete objects)
-		} else if (GetDimension (container.localPosition) * OneOrMinusOne () < GetDimension (t.sizeDelta) * 0.5f) {
+		} else if (GetDimension (content.localPosition) * OneOrMinusOne () < GetDimension (t.sizeDelta) * 0.5f) {
 			NewItemAtStart ();
 			//Using else because when items get added, sometimes the properties in UnityGUI are only updated at the end of the frame.
 			//Only Destroy objects if nothing new was added (also nice performance saver while scrolling fast).
 		} else {
 			//Looping through all items.
-			foreach (RectTransform child in container) {
+			foreach (RectTransform child in content) {
 				//Our prefabs are inactive
 				if (!child.gameObject.activeSelf)
 					continue;
@@ -87,7 +88,8 @@ public abstract class InfiniteScroll : MonoBehaviour
 				if (GetPos (child) > GetDimension (t.sizeDelta)) {
 					Destroy (child.gameObject);
 					//We update the container position, since after we delete something from the top, the container moves all of it's content up
-					container.localPosition -= GetVector (GetSize (child));
+					content.localPosition -= (Vector3)GetVector (GetSize (child));
+					dragOffset -= GetVector (GetSize (child));
 					Add (ref itemTypeStart);
 				} else if (GetPos (child) < -(GetDimension (t.sizeDelta) + GetSize (child))) {
 					Destroy (child.gameObject);
@@ -103,7 +105,8 @@ public abstract class InfiniteScroll : MonoBehaviour
 		RectTransform newItem = InstantiateNextItem (itemTypeStart);
 		newItem.SetAsFirstSibling ();
 
-		container.localPosition += GetVector (GetSize (newItem));
+		content.localPosition += (Vector3)GetVector (GetSize (newItem));
+		dragOffset += GetVector (GetSize (newItem));
 		return newItem;
 	}
 
@@ -118,9 +121,29 @@ public abstract class InfiniteScroll : MonoBehaviour
 	{
 		RectTransform nextItem = Instantiate (prefabItems [itemType]) as RectTransform;
 		nextItem.name = prefabItems [itemType].name;
-		nextItem.transform.SetParent (container.transform, false);
+		nextItem.transform.SetParent (content.transform, false);
 		nextItem.gameObject.SetActive (true);
 		return nextItem;
+	}
+	#endregion
+
+	#region overrides
+	public override void OnBeginDrag (UnityEngine.EventSystems.PointerEventData eventData)
+	{
+		dragOffset = Vector2.zero;
+		base.OnBeginDrag (eventData);
+	}
+
+	public override void OnDrag (UnityEngine.EventSystems.PointerEventData eventData)
+	{
+		//TEMP method until I found a better solution
+		if (dragOffset != Vector2.zero) {
+			OnEndDrag (eventData);
+			OnBeginDrag (eventData);
+			dragOffset = Vector2.zero;
+		}
+
+		base.OnDrag (eventData);
 	}
 	#endregion
 
