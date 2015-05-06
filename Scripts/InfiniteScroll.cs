@@ -6,7 +6,9 @@ using UnityEngine.UI;
 
 public abstract class InfiniteScroll : ScrollRect
 {
-	public bool initOnAwake;
+	[HideInInspector]
+	public bool
+		initOnAwake;
 
 	protected RectTransform t;
 
@@ -51,14 +53,16 @@ public abstract class InfiniteScroll : ScrollRect
 		init = true;
 
 		//Creating an array of prefab items and disabling them
-		prefabItems = new RectTransform[content.childCount];
-		int i = 0;
+
+		var tempStack = new Stack<RectTransform> ();
 		foreach (RectTransform child in content) {
-			prefabItems [i] = child;
+			if (!child.gameObject.activeSelf)
+				continue;
+			tempStack.Push (child);
 			child.gameObject.SetActive (false);
-			i++;
 		}
-		
+		prefabItems = tempStack.ToArray ();
+
 		float containerSize = 0;
 		//Filling up the scrollview with initial items
 		while (containerSize < GetDimension(t.sizeDelta)) {

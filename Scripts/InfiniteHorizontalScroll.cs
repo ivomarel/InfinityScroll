@@ -7,7 +7,7 @@ public class InfiniteHorizontalScroll : InfiniteScroll
 {
 	protected override float GetSize (RectTransform item)
 	{
-		return item.GetComponent<LayoutElement> ().minWidth;
+		return item.GetComponent<LayoutElement> ().minWidth + content.GetComponent<HorizontalLayoutGroup> ().spacing;
 	}
 
 	protected override float GetDimension (Vector2 vector)
