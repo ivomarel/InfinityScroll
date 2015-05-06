@@ -10,7 +10,15 @@ public abstract class InfiniteScroll : ScrollRect
 	public bool
 		initOnAwake;
 
-	protected RectTransform t;
+	protected RectTransform t {
+		get {
+			if (_t == null)
+				_t = GetComponent<RectTransform> ();
+			return _t;
+		}
+	}
+
+	private RectTransform _t;
 
 	private RectTransform[] prefabItems;
 	private int itemTypeStart = 0;
@@ -37,13 +45,7 @@ public abstract class InfiniteScroll : ScrollRect
 	{
 		if (!Application.isPlaying)
 			return;
-
-		t = GetComponent<RectTransform> ();
-
 		//Currently the anchors are set in code because it only works properly under these conditions.
-		t.anchorMax = new Vector2 (0.5f, 0.5f);
-		t.anchorMin = new Vector2 (0.5f, 0.5f);
-
 		if (initOnAwake)
 			Init ();
 	}
