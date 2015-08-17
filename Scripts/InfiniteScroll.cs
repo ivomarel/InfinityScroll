@@ -45,7 +45,7 @@ public abstract class InfiniteScroll : ScrollRect
 	{
 		if (!Application.isPlaying)
 			return;
-		//Currently the anchors are set in code because it only works properly under these conditions.
+
 		if (initOnAwake)
 			Init ();
 	}
@@ -71,16 +71,17 @@ public abstract class InfiniteScroll : ScrollRect
 			RectTransform nextItem = NewItemAtEnd ();
 			containerSize += GetSize (nextItem);
 		}
+
+
 	}
 	private void Update ()
 	{
 		if (!Application.isPlaying || !init)
 			return;
-
 		if (GetDimension (content.sizeDelta) - (GetDimension (content.localPosition) * OneOrMinusOne ()) < GetDimension (t.sizeDelta)) {
 			NewItemAtEnd ();
 			//margin is used to Destroy objects. We add them at half the margin (if we do it at full margin, we continuously add and delete objects)
-		} else if (GetDimension (content.localPosition) * OneOrMinusOne () < GetDimension (t.sizeDelta) * 0.5f) {
+		} else if (GetDimension (content.localPosition) * OneOrMinusOne () < (GetDimension (t.sizeDelta) * 0.5f)) {
 			NewItemAtStart ();
 			//Using else because when items get added, sometimes the properties in UnityGUI are only updated at the end of the frame.
 			//Only Destroy objects if nothing new was added (also nice performance saver while scrolling fast).
